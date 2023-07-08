@@ -1,0 +1,26 @@
+FROM ccr.ccs.tencentyun.com/yunbao/orekabase:1.0
+LABEL maintainer="Ufintek"
+
+RUN mkdir /etc/orkaudio && chmod 777 /etc/orkaudio
+
+COPY ./docker/orkaudio /usr/sbin/orkaudio
+COPY ./docker/libvoip.so.0.0.0 /usr/lib/
+COPY ./docker/libgenerator.so.0.0.0 /usr/lib/
+COPY ./docker/liborkbase.so.0.0.0  /usr/lib/
+COPY ./docker/libmirrortools.so.{MIRROR_VERSION} /usr/lib/
+COPY ./docker/config.xml /etc/orkaudio/
+COPY ./docker/logging.properties /etc/orkaudio/
+COPY ./docker/entrypoint.sh /opt/
+
+RUN ln -s /usr/lib/libvoip.so.0.0.0 /usr/lib/libvoip.so.0 \
+    && ln -s /usr/lib/libvoip.so.0.0.0 /usr/lib/libvoip.so \
+    && ln -s /usr/lib/libgenerator.so.0.0.0 /usr/lib/libgenerator.so.0 \
+    && ln -s /usr/lib/libgenerator.so.0.0.0 /usr/lib/libgenerator.so \
+    && ln -s /usr/lib/liborkbase.so.0.0.0 /usr/lib/liborkbase.so.0 \
+    && ln -s /usr/lib/liborkbase.so.0.0.0 /usr/lib/liborkbase.so \
+    && ln -s /usr/lib/libmirrortools.so.{MIRROR_VERSION} /usr/lib/libmirrortools.so 
+
+ENV SHELL /bin/bash
+ENTRYPOINT [ "/opt/entrypoint.sh" ]
+
+CMD ["orkaudio", "debug"]

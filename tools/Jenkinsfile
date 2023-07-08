@@ -1,0 +1,42 @@
+pipeline {
+    agent {
+        docker {
+            image 'ccr.ccs.tencentyun.com/yunbao/oreka-builder:1.2'
+            args '-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
+            registryUrl 'https://ccr.ccs.tencentyun.com'
+            registryCredentialsId '1f254393-d83c-469e-99ef-7ad0a023ad34'
+        }
+    }
+
+    stages {
+      stage('阶段 2-1') {
+        steps {
+          checkout([
+            $class: 'GitSCM',
+            branches: [[name: env.GIT_BUILD_REF]],
+            userRemoteConfigs: [[
+              url: env.GIT_REPO_URL,
+              credentialsId: env.CREDENTIALS_ID
+            ]]])
+          }
+        }
+
+      stage('Build') {
+        steps {
+          sh 'cd tools; chmod +x ./build.sh; ./build.sh'
+        }
+      }
+      stage('git打tag') {
+        steps {
+          sh '''git config remote.origin.url "https://yumoren:Ycd543177%21%40@git.code.tencent.com/dolphin-pc/traffic-mirroring/oreka.git"
+git config -l
+git fetch origin
+git tag -d $MAJOR_NUMBER.$MINOR_NUMBER.$FIX_NUMBER.$CI_BUILD_NUMBER ||ls
+git push origin :refs/tags/$MAJOR_NUMBER.$MINOR_NUMBER.$FIX_NUMBER.$CI_BUILD_NUMBER
+git tag -a $MAJOR_NUMBER.$MINOR_NUMBER.$FIX_NUMBER.$CI_BUILD_NUMBER -m "coding auto create" $GIT_COMMIT
+git push -v origin refs/tags/$MAJOR_NUMBER.$MINOR_NUMBER.$FIX_NUMBER.$CI_BUILD_NUMBER'''
+        }
+      }
+
+    }
+}
